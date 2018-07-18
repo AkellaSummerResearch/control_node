@@ -202,3 +202,6 @@ target_link_libraries(training ${catkin_LIBRARIES})
 
 add_executable(control src/control.cpp)
 target_link_libraries(control ${catkin_LIBRARIES})
+
+add_executable(waypoint src/waypoint.cpp)
+target_link_libraries(waypoint ${catkin_LIBRARIES})

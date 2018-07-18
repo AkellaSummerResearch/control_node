@@ -1,5 +1,5 @@
 
 <launch>
-     <rosparam command="load" ns="training" file="$(find control_node)/cfg/training.yaml"/>
+     <rosparam command="load" ns="training" file="$(find control_node)/cfg/inspection.yaml"/>
      <node pkg="control_node" type="control" name="control" output="screen"></node>
 </launch>

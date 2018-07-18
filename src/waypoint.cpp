@@ -31,8 +31,7 @@ geometry_msgs::PoseStamped waypoint;
 float GYM_OFFSET;
 float current_heading;
 geometry_msgs::Pose correctionVector;
-float headingCorrection = 0;
-std::vector<geometry_msgs::PoseStamped> correctionList;
+std::vector<geometry_msgs::Pose> correctionList;
 
 
 struct localWaypoint{
@@ -126,25 +125,7 @@ void loadWaypoints(string filename)
 		cout << x << " " << y << " " << z << " " << psi << endl;
 	}
 }
-void local_cb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
-{
-	geometry_msgs::PoseWithCovarianceStamped localPose;
-	localPose = *msg;
-	geometry_msgs::PoseStamped potentialCorrectionVector;
-	potentialCorrectionVector.pose.position.x = localPose.pose.pose.position.x - current_pose.pose.pose.position.x;
-	potentialCorrectionVector.pose.position.y = localPose.pose.pose.position.y - current_pose.pose.pose.position.y;
-	potentialCorrectionVector.pose.position.z = localPose.pose.pose.position.z - current_pose.pose.pose.position.z;
-	
-	potentialCorrectionVector.pose.orientation.w = localPose.pose.pose.orientation.w;
-	potentialCorrectionVector.pose.orientation.x = localPose.pose.pose.orientation.x;
-	potentialCorrectionVector.pose.orientation.y = localPose.pose.pose.orientation.y;
-	potentialCorrectionVector.pose.orientation.z = localPose.pose.pose.orientation.z;
 
-
-	correctionList.push_back(potentialCorrectionVector);
-	ROS_INFO("Correction Vector x %f y %f z %f " , potentialCorrectionVector.pose.position.x, potentialCorrectionVector.pose.position.y, potentialCorrectionVector.pose.position.z);
-	//ROS_INFO("LOCAL POSITION RECIEVED %f %f %f", localPose.pose.position.x, localPose.pose.position.y, localPose.pose.position.z);
-}
 
 int main(int argc, char** argv)
 {
@@ -156,7 +137,6 @@ int main(int argc, char** argv)
 	ros::Publisher local_pos_pub = controlnode.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
 	ros::Subscriber currentPos = controlnode.subscribe<nav_msgs::Odometry>("/mavros/local_position/odom", 10, pose_cb);
 	ros::Subscriber state_sub = controlnode.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
-	ros::Subscriber localization = controlnode.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/rtabmap/localization_pose", 1, local_cb);
 	ros::ServiceClient arming_client = controlnode.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
 	ros::ServiceClient land_client = controlnode.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
 	ros::ServiceClient set_mode_client = controlnode.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
@@ -181,19 +161,6 @@ int main(int argc, char** argv)
 		ROS_INFO("File name loaded %s ", filename.c_str());
 	}
 	loadWaypoints(filename);
-	string inspectionFile;
-	if (!controlnode.hasParam("/training/inspection"))
-	{
-		ROS_INFO("No param named 'inspection'");
-	}else{
-		string path;
-		string file;
-		ros::param::get("/training/inspection", file);
-		ros::param::get("/training/path", path);
-		inspectionFile = path + file;
-		cout << filename << endl;
-		ROS_INFO("File name loaded %s ", filename.c_str());
-	}
 	
 
   	// wait for FCU connection
@@ -282,7 +249,6 @@ int main(int argc, char** argv)
 	float deltaZ;
 	float dMag;
 	float tollorance = .3;
-	int inspectionStart = 0;
 	while(ros::ok())
 	{
 		deltaX = abs(waypoint.pose.position.x - current_pose.pose.pose.position.x);
@@ -306,59 +272,6 @@ int main(int argc, char** argv)
 
 		}
 
-		if(correctionList.size() > 2 )
-		{
-
-			float sumx = 0;
-			float sumy = 0;
-			float sumz = 0;
-			float q0, q1, q2, q3, psi;
-			float sumPsi = 0;
-
-			for(int i=0; i < correctionList.size(); i++ )
-			{
-				sumx = correctionList[i].pose.position.x + sumx;
-				sumy = correctionList[i].pose.position.y + sumy;
-				sumz = correctionList[i].pose.position.z + sumz;
-
-				q0 = correctionList[i].pose.orientation.w;
-				q1 = correctionList[i].pose.orientation.x;
-				q2 = correctionList[i].pose.orientation.y;
-				q3 = correctionList[i].pose.orientation.z;
-				psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-				sumPsi = -psi*(180/M_PI) + 90 + sumPsi;
-			} 
-			ROS_INFO("Correction is %f %f %f ", sumx/correctionList.size(), sumy/correctionList.size(), sumz/correctionList.size() );
-			correctionVector.position.x = sumx/correctionList.size(); 
-			correctionVector.position.y = sumy/correctionList.size();
-			correctionVector.position.z = sumz/correctionList.size(); 
-			if (inspectionStart == 0 && correctionList.size() > 2)
-			{
-				ROS_INFO("Starting Inspection");
-				while(!waypointList.empty())
-				{
-					waypointList.pop_back();
-				}
-				//make sure drone doesn't fly into plane while flying to first waypoint of inspection process
-				localWaypoint nextWayPoint;
-
-				nextWayPoint.x = current_pose.pose.pose.position.x;
-				nextWayPoint.y = current_pose.pose.pose.position.y;
-				nextWayPoint.z = 10;
-				nextWayPoint.psi = current_heading;
-				waypointList.push_back(nextWayPoint);
-
-				nextWayPoint.x = 0;
-				nextWayPoint.y = 0;
-				nextWayPoint.z = 10;
-				nextWayPoint.psi = current_heading;
-				waypointList.push_back(nextWayPoint);
-				loadWaypoints(inspectionFile);
-				wayPointNum = 0;
-				inspectionStart = 1;
-
-			}
-		}
 		ros::spinOnce();
 		local_pos_pub.publish(waypoint);
 		rate.sleep();
