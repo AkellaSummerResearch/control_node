@@ -31,8 +31,8 @@ geometry_msgs::PoseStamped waypoint;
 float GYM_OFFSET;
 float current_heading;
 geometry_msgs::Pose correctionVector;
-float headingCorrection = 0;
-std::vector<geometry_msgs::PoseStamped> correctionList;
+float CORRECTIONHEADING = 0;
+
 
 
 struct localWaypoint{
@@ -42,6 +42,24 @@ struct localWaypoint{
 	float psi;
 };
 std::vector<localWaypoint> waypointList;
+std::vector<localWaypoint> correctionList;
+
+void enu_2_gym(nav_msgs::Odometry current_pose_enu)
+{
+  float x = current_pose_enu.pose.pose.position.x;
+  float y = current_pose_enu.pose.pose.position.y;
+  float z = current_pose_enu.pose.pose.position.z;
+  float deg2rad = (M_PI/180);
+  float X = x*cos(GYM_OFFSET*deg2rad) - y*sin(GYM_OFFSET*deg2rad);
+  float Y = x*sin(GYM_OFFSET*deg2rad) + y*cos(GYM_OFFSET*deg2rad);
+  float Z = z;
+  //ROS_INFO("Local position %f %f %f",X, Y, Z);
+  // current_pose.pose.pose.position.x = X;
+  // current_pose.pose.pose.position.y = Y;
+  // current_pose.pose.pose.position.z = Z;
+
+
+}
 
 //get armed state
 void state_cb(const mavros_msgs::State::ConstPtr& msg)
@@ -53,19 +71,23 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg)
 void pose_cb(const nav_msgs::Odometry::ConstPtr& msg)
 {
   current_pose = *msg;
+  enu_2_gym(current_pose);
   float q0 = current_pose.pose.pose.orientation.w;
   float q1 = current_pose.pose.pose.orientation.x;
   float q2 = current_pose.pose.pose.orientation.y;
   float q3 = current_pose.pose.pose.orientation.z;
   float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-  current_heading = -psi*(180/M_PI) + 90;
-  //ROS_INFO("Current Heading %f ", current_heading);
-  // ROS_INFO("x: %f y: %f z: %f", current_pose.pose.pose.position.x, current_pose.pose.pose.position.y, current_pose.pose.pose.position.z);
+  //ROS_INFO("Current Heading %f ENU", psi*(180/M_PI));
+  //Heading is in ENU
+  current_heading = psi*(180/M_PI) - GYM_OFFSET;
+  //ROS_INFO("Current Heading %f origin", current_heading);
+  //ROS_INFO("x: %f y: %f z: %f", current_pose.pose.pose.position.x, current_pose.pose.pose.position.y, current_pose.pose.pose.position.z);
 }
-//set orientation of the drone (drone should always be level)
+//set orientation of the drone (drone should always be level) 
+// Heading input should match the NED coordinate system
 void setHeading(float heading)
 {
-  heading = -heading + 90 - GYM_OFFSET;
+  heading = heading + CORRECTIONHEADING + GYM_OFFSET;
   float yaw = heading*(M_PI/180);
   float pitch = 0;
   float roll = 0;
@@ -90,17 +112,26 @@ void setHeading(float heading)
 // set position to fly to in the gym frame
 void setDestination(float x, float y, float z)
 {
-	x = x - correctionVector.position.x;
-	y = y - correctionVector.position.y;
-	z = z - correctionVector.position.z;
+
+	//transform map to local
 	float deg2rad = (M_PI/180);
-	float X = x*cos(-GYM_OFFSET*deg2rad) - y*sin(-GYM_OFFSET*deg2rad);
-	float Y = x*sin(-GYM_OFFSET*deg2rad) + y*cos(-GYM_OFFSET*deg2rad);
-	float Z = z;
-	waypoint.pose.position.x = X;
-	waypoint.pose.position.y = Y;
-	waypoint.pose.position.z = Z;
-	ROS_INFO("Destination set to x: %f y: %f z: %f", X, Y, Z);
+	float Xlocal = x*cos((CORRECTIONHEADING + GYM_OFFSET - 90)*deg2rad) - y*sin((CORRECTIONHEADING + GYM_OFFSET - 90)*deg2rad);
+	float Ylocal = x*sin((CORRECTIONHEADING + GYM_OFFSET - 90)*deg2rad) + y*cos((CORRECTIONHEADING + GYM_OFFSET - 90)*deg2rad);
+	float Zlocal = z;
+
+	x = Xlocal + correctionVector.position.x;
+	y = Ylocal + correctionVector.position.y;
+	z = Zlocal + correctionVector.position.z;
+	ROS_INFO("Destination set to x: %f y: %f z: %f origin frame", x, y, z);
+	
+	// float X = x*cos(-GYM_OFFSET*deg2rad) - y*sin(-(GYM_OFFSET)*deg2rad);
+	// float Y = x*sin(-GYM_OFFSET*deg2rad) + y*cos(-(GYM_OFFSET)*deg2rad);
+	// float Z = z;
+	//ROS_INFO("Destination set to x: %f y: %f z: %f ENU frame", X, Y, Z);
+	waypoint.pose.position.x = x;
+	waypoint.pose.position.y = y;
+	waypoint.pose.position.z = z;
+	
 }
 void loadWaypoints(string filename)
 {
@@ -130,19 +161,21 @@ void local_cb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	geometry_msgs::PoseWithCovarianceStamped localPose;
 	localPose = *msg;
-	geometry_msgs::PoseStamped potentialCorrectionVector;
-	potentialCorrectionVector.pose.position.x = localPose.pose.pose.position.x - current_pose.pose.pose.position.x;
-	potentialCorrectionVector.pose.position.y = localPose.pose.pose.position.y - current_pose.pose.pose.position.y;
-	potentialCorrectionVector.pose.position.z = localPose.pose.pose.position.z - current_pose.pose.pose.position.z;
+	localWaypoint potentialCorrectionVector;
+	potentialCorrectionVector.x = current_pose.pose.pose.position.x - localPose.pose.pose.position.x;
+	potentialCorrectionVector.y = current_pose.pose.pose.position.y - localPose.pose.pose.position.y;
+	potentialCorrectionVector.z = current_pose.pose.pose.position.z - localPose.pose.pose.position.z;
 	
-	potentialCorrectionVector.pose.orientation.w = localPose.pose.pose.orientation.w;
-	potentialCorrectionVector.pose.orientation.x = localPose.pose.pose.orientation.x;
-	potentialCorrectionVector.pose.orientation.y = localPose.pose.pose.orientation.y;
-	potentialCorrectionVector.pose.orientation.z = localPose.pose.pose.orientation.z;
-
-
+	float q0 = localPose.pose.pose.orientation.w;
+	float q1 = localPose.pose.pose.orientation.x;
+	float q2 = localPose.pose.pose.orientation.y;
+	float q3 = localPose.pose.pose.orientation.z;
+	float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
+  	float map_heading = current_heading - psi*(180/M_PI) ;
+  	potentialCorrectionVector.psi = map_heading;
 	correctionList.push_back(potentialCorrectionVector);
-	ROS_INFO("Correction Vector x %f y %f z %f " , potentialCorrectionVector.pose.position.x, potentialCorrectionVector.pose.position.y, potentialCorrectionVector.pose.position.z);
+	ROS_INFO("Current map heading %f", map_heading);
+	//ROS_INFO("Correction Vector x %f y %f z %f " , potentialCorrectionVector.pose.position.x, potentialCorrectionVector.pose.position.y, potentialCorrectionVector.pose.position.z);
 	//ROS_INFO("LOCAL POSITION RECIEVED %f %f %f", localPose.pose.position.x, localPose.pose.position.y, localPose.pose.position.z);
 }
 
@@ -221,9 +254,8 @@ int main(int argc, char** argv)
 		GYM_OFFSET += psi*(180/M_PI);
 		// ROS_INFO("current heading%d: %f", i, GYM_OFFSET/i);
 	}
-	GYM_OFFSET /= -30;
-	GYM_OFFSET += 90;
-	ROS_INFO("the N' axis is facing: %f", GYM_OFFSET);
+	GYM_OFFSET /= 30;
+	ROS_INFO("the X' axis is facing: %f", GYM_OFFSET);
 	cout << GYM_OFFSET << "\n" << endl;
 	
 
@@ -283,6 +315,7 @@ int main(int argc, char** argv)
 	float dMag;
 	float tollorance = .3;
 	int inspectionStart = 0;
+	
 	while(ros::ok())
 	{
 		deltaX = abs(waypoint.pose.position.x - current_pose.pose.pose.position.x);
@@ -306,7 +339,7 @@ int main(int argc, char** argv)
 
 		}
 
-		if(correctionList.size() > 2 )
+		if(correctionList.size() == 7 )
 		{
 
 			float sumx = 0;
@@ -317,18 +350,21 @@ int main(int argc, char** argv)
 
 			for(int i=0; i < correctionList.size(); i++ )
 			{
-				sumx = correctionList[i].pose.position.x + sumx;
-				sumy = correctionList[i].pose.position.y + sumy;
-				sumz = correctionList[i].pose.position.z + sumz;
-
-				q0 = correctionList[i].pose.orientation.w;
-				q1 = correctionList[i].pose.orientation.x;
-				q2 = correctionList[i].pose.orientation.y;
-				q3 = correctionList[i].pose.orientation.z;
-				psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-				sumPsi = -psi*(180/M_PI) + 90 + sumPsi;
+				sumx = correctionList[i].x + sumx;
+				sumy = correctionList[i].y + sumy;
+				sumz = correctionList[i].z + sumz;
+				sumPsi = correctionList[i].psi + sumPsi;	
+				// q0 = correctionList[i].pose.orientation.w;
+				// q1 = correctionList[i].pose.orientation.x;
+				// q2 = correctionList[i].pose.orientation.y;
+				// q3 = correctionList[i].pose.orientation.z;
+				// psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
+				// ROS_INFO("localization psi %f", psi);
+				// sumPsi = -psi*(180/M_PI) + 90 + sumPsi;
 			} 
+			CORRECTIONHEADING = sumPsi/correctionList.size();
 			ROS_INFO("Correction is %f %f %f ", sumx/correctionList.size(), sumy/correctionList.size(), sumz/correctionList.size() );
+			ROS_INFO("Correction Heading is %f", CORRECTIONHEADING );
 			correctionVector.position.x = sumx/correctionList.size(); 
 			correctionVector.position.y = sumy/correctionList.size();
 			correctionVector.position.z = sumz/correctionList.size(); 
@@ -362,6 +398,7 @@ int main(int argc, char** argv)
 		ros::spinOnce();
 		local_pos_pub.publish(waypoint);
 		rate.sleep();
+		//ROS_INFO("Correction is %f %f %f ", correctionVector.position.x, correctionVector.position.y, correctionVector.position.z );
 	}
 	return 0;
 }

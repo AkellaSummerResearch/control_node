@@ -13,6 +13,7 @@ using namespace std;
 float lastPointSet;
 nav_msgs::Odometry current_pose;
 float current_heading;
+float GYM_OFFSET;
 string filename;
 
 
@@ -20,8 +21,9 @@ string filename;
 void logPosition()
 {
 	std::ofstream outPos(filename.c_str(), std::ios::app);
-  	outPos << current_pose.pose.pose.position.x << " " << current_pose.pose.pose.position.y << " " << current_pose.pose.pose.position.z  << " " << current_heading << "\n";
-  	ROS_INFO("x: %f y: %f z: %f psi: %f", current_pose.pose.pose.position.x, current_pose.pose.pose.position.y, current_pose.pose.pose.position.z, current_heading);
+	float psi =  current_heading -GYM_OFFSET;
+  	outPos << current_pose.pose.pose.position.x << " " << current_pose.pose.pose.position.y << " " << current_pose.pose.pose.position.z  << " " << psi << "\n";
+  	ROS_INFO("x: %f y: %f z: %f psi: %f", current_pose.pose.pose.position.x, current_pose.pose.pose.position.y, current_pose.pose.pose.position.z, psi);
   	outPos.close();
 }
 void pose_cb(const nav_msgs::Odometry::ConstPtr& msg)
@@ -32,7 +34,7 @@ void pose_cb(const nav_msgs::Odometry::ConstPtr& msg)
   float q2 = current_pose.pose.pose.orientation.y;
   float q3 = current_pose.pose.pose.orientation.z;
   float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-  current_heading = -psi*(180/M_PI) + 90;
+  current_heading = psi*(180/M_PI);
   //ROS_INFO("Current Heading %f ", current_heading);
 
   
@@ -69,6 +71,27 @@ int main(int argc, char **argv)
 	cout << filename << endl;
 	ROS_INFO("File name loaded %s ", filename.c_str());
 	}
+
+	ROS_INFO("INITIALIZING ROS");
+	//set the orientation of the local reference frame
+	GYM_OFFSET = 0;
+	for (int i = 1; i <= 30; ++i) {
+		ros::spinOnce();
+		ros::Duration(0.1).sleep();
+
+		float q0 = current_pose.pose.pose.orientation.w;
+		float q1 = current_pose.pose.pose.orientation.x;
+		float q2 = current_pose.pose.pose.orientation.y;
+		float q3 = current_pose.pose.pose.orientation.z;
+		float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) ); // yaw
+
+		GYM_OFFSET += psi*(180/M_PI);
+		// ROS_INFO("current heading%d: %f", i, GYM_OFFSET/i);
+	}
+	GYM_OFFSET /= 30;
+	ROS_INFO("the X' axis is facing: %f", GYM_OFFSET);
+	cout << GYM_OFFSET << "\n" << endl;
+	
 
     ros::spin();
 
