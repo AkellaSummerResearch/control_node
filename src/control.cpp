@@ -157,6 +157,7 @@ void loadWaypoints(string filename)
 		cout << x << " " << y << " " << z << " " << psi << endl;
 	}
 }
+
 void local_cb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
 	geometry_msgs::PoseWithCovarianceStamped localPose;
@@ -171,10 +172,13 @@ void local_cb(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 	float q2 = localPose.pose.pose.orientation.y;
 	float q3 = localPose.pose.pose.orientation.z;
 	float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-  	float map_heading = current_heading - psi*(180/M_PI) ;
+
+  	float map_heading = current_heading - psi*(180/M_PI);
   	potentialCorrectionVector.psi = map_heading;
 	correctionList.push_back(potentialCorrectionVector);
-	ROS_INFO("Current map heading %f", map_heading);
+	ROS_INFO("Current heading %f", current_heading);
+	ROS_INFO("Current map heading %f", psi*(180/M_PI));
+	ROS_INFO("potential correction heading %f", map_heading);
 	//ROS_INFO("Correction Vector x %f y %f z %f " , potentialCorrectionVector.pose.position.x, potentialCorrectionVector.pose.position.y, potentialCorrectionVector.pose.position.z);
 	//ROS_INFO("LOCAL POSITION RECIEVED %f %f %f", localPose.pose.position.x, localPose.pose.position.y, localPose.pose.position.z);
 }
@@ -341,59 +345,55 @@ int main(int argc, char** argv)
 
 		if(correctionList.size() == 7 )
 		{
+			ROS_INFO("Starting Inspection");
+			while(!waypointList.empty())
+			{
+				waypointList.pop_back();
+			}
+			//make sure drone doesn't fly into plane while flying to first waypoint of inspection process
+			localWaypoint nextWayPoint;
+
+			nextWayPoint.x = waypointList[wayPointNum-1].x;
+			nextWayPoint.y = waypointList[wayPointNum-1].y;
+			nextWayPoint.z = 10;
+			nextWayPoint.psi = current_heading;
+			waypointList.push_back(nextWayPoint);
+
+			nextWayPoint.x = 0;
+			nextWayPoint.y = 0;
+			nextWayPoint.z = 10;
+			nextWayPoint.psi = current_heading;
+			waypointList.push_back(nextWayPoint);
+			loadWaypoints(inspectionFile);
+			wayPointNum = 0;
+			inspectionStart = 1;
+
+
 
 			float sumx = 0;
 			float sumy = 0;
 			float sumz = 0;
 			float q0, q1, q2, q3, psi;
-			float sumPsi = 0;
-
+			float sumPsiCos = 0;
+			float sumPsiSin = 0;
 			for(int i=0; i < correctionList.size(); i++ )
 			{
 				sumx = correctionList[i].x + sumx;
 				sumy = correctionList[i].y + sumy;
 				sumz = correctionList[i].z + sumz;
-				sumPsi = correctionList[i].psi + sumPsi;	
-				// q0 = correctionList[i].pose.orientation.w;
-				// q1 = correctionList[i].pose.orientation.x;
-				// q2 = correctionList[i].pose.orientation.y;
-				// q3 = correctionList[i].pose.orientation.z;
-				// psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-				// ROS_INFO("localization psi %f", psi);
-				// sumPsi = -psi*(180/M_PI) + 90 + sumPsi;
+
+				//averaging circular numbers is fun! https://en.wikipedia.org/wiki/Mean_of_circular_quantities
+				sumPsiCos = cos(correctionList[i].psi*(M_PI/180)) + sumPsiCos;
+				sumPsiSin = sin(correctionList[i].psi*(M_PI/180)) + sumPsiSin;
+				
 			} 
-			CORRECTIONHEADING = sumPsi/correctionList.size();
+			CORRECTIONHEADING = atan2(sumPsiSin,sumPsiCos)*(180/M_PI);
 			ROS_INFO("Correction is %f %f %f ", sumx/correctionList.size(), sumy/correctionList.size(), sumz/correctionList.size() );
 			ROS_INFO("Correction Heading is %f", CORRECTIONHEADING );
 			correctionVector.position.x = sumx/correctionList.size(); 
 			correctionVector.position.y = sumy/correctionList.size();
 			correctionVector.position.z = sumz/correctionList.size(); 
-			if (inspectionStart == 0 && correctionList.size() > 2)
-			{
-				ROS_INFO("Starting Inspection");
-				while(!waypointList.empty())
-				{
-					waypointList.pop_back();
-				}
-				//make sure drone doesn't fly into plane while flying to first waypoint of inspection process
-				localWaypoint nextWayPoint;
-
-				nextWayPoint.x = current_pose.pose.pose.position.x;
-				nextWayPoint.y = current_pose.pose.pose.position.y;
-				nextWayPoint.z = 10;
-				nextWayPoint.psi = current_heading;
-				waypointList.push_back(nextWayPoint);
-
-				nextWayPoint.x = 0;
-				nextWayPoint.y = 0;
-				nextWayPoint.z = 10;
-				nextWayPoint.psi = current_heading;
-				waypointList.push_back(nextWayPoint);
-				loadWaypoints(inspectionFile);
-				wayPointNum = 0;
-				inspectionStart = 1;
-
-			}
+			
 		}
 		ros::spinOnce();
 		local_pos_pub.publish(waypoint);
