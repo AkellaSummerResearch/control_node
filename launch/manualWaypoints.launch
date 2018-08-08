@@ -1,0 +1,5 @@
+
+<launch>
+     <rosparam command="load" ns="training" file="$(find control_node)/cfg/manualWaypoints.yaml"/>
+     <node pkg="control_node" type="manualWaypointGen" name="manualWaypointGen" output="screen"></node>
+</launch>

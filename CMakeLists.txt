@@ -197,8 +197,8 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(training src/training.cpp)
-target_link_libraries(training ${catkin_LIBRARIES})
+add_executable(manualWaypointGen src/manualWaypointGen.cpp)
+target_link_libraries(manualWaypointGen ${catkin_LIBRARIES})
 
 add_executable(control src/control.cpp)
 target_link_libraries(control ${catkin_LIBRARIES})
