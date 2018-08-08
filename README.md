@@ -177,6 +177,15 @@ roslaunch control_node control.launch
 
 ---
 
+## Updating Waypoint Speed and Acceleration
+
+```
+subl ~/Firmware/posix-configs/SITL/init/ekf2/iris
+```
+Full list of [Parameters](https://dev.px4.io/en/advanced/parameter_reference.html)
+
+Usefull parameters under Multicopter Position Control
+
 References:
 
 - https://github.com/radionavlab/px4_control
