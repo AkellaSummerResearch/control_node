@@ -20,7 +20,36 @@ git clone https://github.com/radionavlab/mg_msgs.git
 
 ## installing r-tab
 
-coming soon
+
+
+Required dependencies
+
+The easiest way to get all them (Qt, PCL, VTK, OpenCV, ...) is to install/uninstall rtabmap binaries:
+
+```
+sudo apt-get install ros-kinetic-rtabmap ros-kinetic-rtabmap-ros
+sudo apt-get remove ros-kinetic-rtabmap ros-kinetic-rtabmap-ros
+```
+
+
+innstall RTAB-Map standalone libraries. Add `-DCMAKE_INSTALL_PREFIX=~/catkin_ws/devel` to cmake command below if you want to install in your Catkin's devel folder without sudo. Do not clone in your Catkin workspace.
+
+```
+cd ~
+git clone https://github.com/AkellaSummerResearch/rtabmap.git
+cd rtabmap/build
+cmake ..  [<---double dots included]
+make
+sudo make install
+```
+
+Install RTAB-Map ros-pkg in your src folder of your Catkin workspace.
+
+```
+cd ~/catkin_ws
+git clone https://github.com/introlab/rtabmap_ros.git src/rtabmap_ros
+catkin build
+```
 
 ## Mapping the plane
 
