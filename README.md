@@ -2,7 +2,14 @@
 
 This package uses mavros to conduct a visual inspection of the f-35 using predetermained waypoints. The inspection utalizes r-tab to conduct a localiztion and formulate correction between the local frame of reference and the map of the plane's reference frame
 
+
 ## Dependecies
+
+This package assumes you have already configured *Simulations ROS* Please complete instalation instructions for Simulations ROS first. 
+
+https://github.com/AkellaSummerResearch/simulations_ros
+
+please install 
 
 apt packages
 ```
@@ -12,15 +19,12 @@ sudo apt-get install libeigen3-dev
 ros packages
 ```
 cd catkin_ws/src
-git clone https://github.com/AkellaSummerResearch/simulations_ros.git
 git clone https://github.com/AkellaSummerResearch/px4_control.git
 git clone https://github.com/radionavlab/joystick_drivers
 git clone https://github.com/radionavlab/mg_msgs.git
 ```
 
 ## installing r-tab
-
-
 
 Required dependencies
 
