@@ -56,6 +56,9 @@ git clone https://github.com/AkellaSummerResearch/rtabmap_ros src/rtabmap_ros
 catkin build
 ```
 
+Create folder for storing map databases:
+
+
 ## Build control_node
 
 ```
