@@ -52,10 +52,7 @@ Install RTAB-Map ros-pkg in your src folder of your Catkin workspace.
 
 ```
 cd ~/catkin_ws
-git clone https://github.com/introlab/rtabmap_ros.git src/rtabmap_ros
-cd ~/catkin_wssrc/rtabmap_ros
-git checkout 566044256534a9d15480cd8cd0836333ddf4bad9
-cd ~/catkin_ws
+git clone https://github.com/AkellaSummerResearch/rtabmap_ros src/rtabmap_ros
 catkin build
 ```
 
