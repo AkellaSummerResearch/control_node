@@ -58,6 +58,15 @@ cd ~/catkin_ws
 catkin build
 ```
 
+## Build control_node
+
+```
+cd ~/catkin_ws/src
+git clone https://github.com/AkellaSummerResearch/control_node.git
+cd ~/catkin_ws
+catkin build
+```
+
 ## Mapping the plane
 
 The localization algorithm works by performing loop closers. Because of this it is important that you map places in position and orientation that your drone is likley to fly. 
