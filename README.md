@@ -151,11 +151,11 @@ filename: "inspection.wp"
 ```
 // first terminal 
 
-roslaunch simulations_ros depthcam.launch
+./startsim.sh
 
 //next terminal 
 
-./startsim.sh
+roslaunch simulations_ros px4.launch
 
 //next terminal
 
