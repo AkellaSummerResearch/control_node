@@ -3,7 +3,7 @@ import math
 from os import walk, getcwd
 
 
-outpath = "/home/lockheed/catkin_ws/src/control_node/waypoints/"
+outpath = "/home/mma2739/lockheed_ws/src/control_node/waypoints/"
 name = "start2.wp"
 txt_outpath = outpath + name
 
