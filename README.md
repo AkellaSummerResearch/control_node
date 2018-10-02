@@ -58,6 +58,10 @@ catkin build
 
 Create folder for storing map databases:
 
+```
+mkdir ~/mapdb
+```
+
 
 ## Build control_node
 
