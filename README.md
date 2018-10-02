@@ -200,11 +200,11 @@ train.wp should be the waypoints for the inspection
 ```
 // first terminal 
 
-roslaunch simulations_ros depthcam.launch
+./startsim.sh
 
 //next terminal 
 
-./startsim.sh
+roslaunch simulations_ros px4.launch
 
 //next terminal
 
