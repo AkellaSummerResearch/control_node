@@ -22,6 +22,7 @@ cd catkin_ws/src
 git clone https://github.com/AkellaSummerResearch/px4_control.git
 git clone https://github.com/radionavlab/joystick_drivers
 git clone https://github.com/radionavlab/mg_msgs.git
+git clone https://github.com/radionavlab/tf_publisher.git
 ```
 
 ## installing r-tab
@@ -102,11 +103,11 @@ filename: "training.wp"
 ```
 // first terminal 
 
-roslaunch simulations_ros depthcam.launch
+./startsim.sh
 
 //next terminal 
 
-./startsim.sh
+roslaunch simulations_ros px4.launch
 
 //next terminal
 
