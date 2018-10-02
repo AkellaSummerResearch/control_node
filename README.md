@@ -20,9 +20,9 @@ ros packages
 ```
 cd catkin_ws/src
 git clone https://github.com/AkellaSummerResearch/px4_control.git
+git clone https://github.com/AkellaSummerResearch/tf_publisher.git
 git clone https://github.com/radionavlab/joystick_drivers
 git clone https://github.com/radionavlab/mg_msgs.git
-git clone https://github.com/radionavlab/tf_publisher.git
 ```
 
 ## installing r-tab
