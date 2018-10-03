@@ -113,14 +113,6 @@ filename: "training.wp"
 
 roslaunch simulations_ros px4.launch
 
-//next terminal
-
-roslaunch simulations_ros imageproc.launch
-
-//next terminal 
-
-rosrun image_view image_view image:=/webcam/image_raw
-
 //next terminal 
 
 roslaunch simulations_ros kinectMapping.launch
@@ -130,6 +122,12 @@ roslaunch simulations_ros kinectMapping.launch
 roslaunch control_node training.launch
 
 ``` 
+
+The first two commands start the simulation and other packages. If you desire to have a separate window visualizing the drone's camera, then run in a separate terminal:
+
+```
+rosrun image_view image_view image:=/webcam/image_raw
+```
 
 ## Generating Waypoints For Inspection Process
 
@@ -157,10 +155,6 @@ filename: "inspection.wp"
 
 roslaunch simulations_ros px4.launch
 
-//next terminal
-
-roslaunch simulations_ros imageproc.launch
-
 //next terminal 
 
 roslaunch px4_control gazebo.launch
@@ -168,7 +162,6 @@ roslaunch px4_control gazebo.launch
 //next terminal
 
 roslaunch control_node manualWaypoints.launch
-
 
 ``` 
 
@@ -205,14 +198,6 @@ train.wp should be the waypoints for the inspection
 //next terminal 
 
 roslaunch simulations_ros px4.launch
-
-//next terminal
-
-roslaunch simulations_ros imageproc.launch
-
-//next terminal 
-
-rosrun image_view image_view image:=/webcam/image_raw
 
 //next terminal 
 
