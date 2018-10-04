@@ -10,6 +10,7 @@ project(control_node)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  mavros
 )
 
 ## System dependencies are found with CMake's conventions
