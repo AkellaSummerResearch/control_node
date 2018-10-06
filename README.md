@@ -52,7 +52,7 @@ Install RTAB-Map ros-pkg in your src folder of your Catkin workspace.
 ```
 cd ~/catkin_ws
 git clone https://github.com/AkellaSummerResearch/rtabmap_ros src/rtabmap_ros
-catkin build
+catkin_make
 ```
 
 Create folder for storing map databases:
@@ -68,7 +68,7 @@ mkdir ~/mapdb
 cd ~/catkin_ws/src
 git clone https://github.com/AkellaSummerResearch/control_node.git
 cd ~/catkin_ws
-catkin build
+catkin_make
 ```
 
 ## Mapping the plane
