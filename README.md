@@ -18,10 +18,12 @@ sudo apt-get install libeigen3-dev
 
 ros packages
 ```
-cd catkin_ws/src
+cd ~/catkin_ws/src
 git clone https://github.com/AkellaSummerResearch/px4_control.git
 git clone https://github.com/radionavlab/joystick_drivers
 git clone https://github.com/radionavlab/mg_msgs.git
+cd ~/catkin_ws/src/px4_control
+git checkout update_mavros
 ```
 
 ## installing r-tab
