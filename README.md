@@ -14,6 +14,7 @@ please install
 apt packages
 ```
 sudo apt-get install libeigen3-dev
+sudo apt-get install ros-kinetic-octomap
 ```
 
 ros packages
@@ -22,8 +23,26 @@ cd ~/catkin_ws/src
 git clone https://github.com/AkellaSummerResearch/px4_control.git
 git clone https://github.com/radionavlab/joystick_drivers
 git clone https://github.com/radionavlab/mg_msgs.git
+https://github.com/marcelinomalmeidan/mapper.git
 cd ~/catkin_ws/src/px4_control
 git checkout update_mavros
+```
+
+## Installing the minimum snap package
+
+The minimum snap package generates smooth trajectories through waypoints. To install it, open the ```scripts``` folder within the ```simulation_ros``` package:
+
+```
+cd ~/catkin_ws/src/simulation_ros/scripts
+subl install_minsnap_pkg.sh
+```
+
+In the very first line, type the path of your catkin workspace. It most likely is ```~/catkin_ws```, if you've been following the instructions.
+
+Execute the file:
+
+```
+./install_minsnap_pkg.sh
 ```
 
 ## installing r-tab
