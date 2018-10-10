@@ -17,6 +17,21 @@ sudo apt-get install libeigen3-dev
 sudo apt-get install ros-kinetic-octomap
 ```
 
+The minimum snap package generates smooth trajectories through waypoints. To install it, open the ```scripts``` folder within the ```simulation_ros``` package:
+
+```
+cd ~/catkin_ws/src/simulation_ros/scripts
+subl install_minsnap_pkg.sh
+```
+
+In the very first line, type the path of your catkin workspace. It most likely is ```~/catkin_ws```, if you've been following the instructions.
+
+Execute the file:
+
+```
+./install_minsnap_pkg.sh
+```
+
 ros packages
 ```
 cd ~/catkin_ws/src
@@ -59,23 +74,6 @@ For Indigo (quadcopter) version:
 
 ```
 option(USE_KINETIC "Use kinetic version instead of indigo version" FALSE)
-```
-
-## Installing the minimum snap package
-
-The minimum snap package generates smooth trajectories through waypoints. To install it, open the ```scripts``` folder within the ```simulation_ros``` package:
-
-```
-cd ~/catkin_ws/src/simulation_ros/scripts
-subl install_minsnap_pkg.sh
-```
-
-In the very first line, type the path of your catkin workspace. It most likely is ```~/catkin_ws```, if you've been following the instructions.
-
-Execute the file:
-
-```
-./install_minsnap_pkg.sh
 ```
 
 ## installing r-tab
