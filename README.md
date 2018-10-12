@@ -17,19 +17,6 @@ sudo apt-get install libeigen3-dev
 sudo apt-get install ros-kinetic-octomap
 ```
 
-ros packages
-```
-cd ~/catkin_ws/src
-git clone https://github.com/AkellaSummerResearch/px4_control.git
-git clone https://github.com/radionavlab/joystick_drivers
-git clone https://github.com/radionavlab/mg_msgs.git
-https://github.com/marcelinomalmeidan/mapper.git
-cd ~/catkin_ws/src/px4_control
-git checkout update_mavros
-```
-
-## Installing the minimum snap package
-
 The minimum snap package generates smooth trajectories through waypoints. To install it, open the ```scripts``` folder within the ```simulation_ros``` package:
 
 ```
@@ -43,6 +30,50 @@ Execute the file:
 
 ```
 ./install_minsnap_pkg.sh
+```
+
+ros packages
+```
+cd ~/catkin_ws/src
+git clone https://github.com/radionavlab/px4_control.git
+git clone https://github.com/radionavlab/joystick_drivers
+git clone https://github.com/radionavlab/mg_msgs.git
+https://github.com/marcelinomalmeidan/mapper.git
+cd ~/catkin_ws/src/px4_control
+git checkout update_mavros
+```
+
+
+## IMPORTANT!! Compatibility: The quads run an older version of PX4, different than in the simulation!
+
+The quadcopters run an older version of PX4, while the simulation runs a recent version of PX4. I could not find out how to run Gazebo's simulation with the same version of PX4 as what runs in the quadcopter. Because of that, the packages ```px4_control``` and ```mavros``` have to be configured before compiling.
+
+If you want to use the simulation, you need Kinetic version of software. To this end, switch mavros to current version:
+
+```
+cd ~/catkin_ws/src/mavros
+git checkout master
+```
+
+If you want to command the quadcopter, you will need to use the Indigo version of mavros:
+
+```
+cd ~/catkin_ws/src/mavros
+git checkout indigo-devel
+```
+
+Depending on either version, the package px4_control has to be compiled accordingly. This can be changed as a flag in the fourth line of ```~/catkin_ws/src/px4_control/CMakeLists.txt```.
+
+For Kinetic (simulation) version:
+
+```
+option(USE_KINETIC "Use kinetic version instead of indigo version" TRUE)
+```
+
+For Indigo (quadcopter) version:
+
+```
+option(USE_KINETIC "Use kinetic version instead of indigo version" FALSE)
 ```
 
 ## installing r-tab
