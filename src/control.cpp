@@ -286,28 +286,28 @@ int main(int argc, char** argv)
 
 	
 
-	//NEED WAY TO START PROGRAM FROM GCS
-	// wait for mode to be set to OFFBOARD
-    ros::Time last_request_offboard = ros::Time::now();
-    mavros_msgs::SetMode ModeMsg;
-	ModeMsg.request.base_mode = 0;
-    ModeMsg.request.custom_mode = "OFFBOARD";
-	while (ros::ok() && current_state.mode != "OFFBOARD")
-	{
-		ros::spinOnce();
-		rate.sleep();
-		local_pos_pub.publish(waypoint);
+	// //NEED WAY TO START PROGRAM FROM GCS
+	// // wait for mode to be set to OFFBOARD
+ //    ros::Time last_request_offboard = ros::Time::now();
+ //    mavros_msgs::SetMode ModeMsg;
+	// ModeMsg.request.base_mode = 0;
+ //    ModeMsg.request.custom_mode = "OFFBOARD";
+	// while (ros::ok() && current_state.mode != "OFFBOARD")
+	// {
+	// 	ros::spinOnce();
+	// 	rate.sleep();
+	// 	local_pos_pub.publish(waypoint);
 
-		if( current_state.mode != "OFFBOARD" && (ros::Time::now() - last_request_offboard > ros::Duration(1.0)))
-		{
-            if( set_mode_client.call(ModeMsg) && ModeMsg.response.mode_sent)
-            {
-                ROS_INFO("Enabling offboard...");
-            }
-            last_request_offboard = ros::Time::now();
-        }
-	}
-	ROS_INFO("Mode set to OFFBOARD");
+	// 	if( current_state.mode != "OFFBOARD" && (ros::Time::now() - last_request_offboard > ros::Duration(1.0)))
+	// 	{
+ //            if( set_mode_client.call(ModeMsg) && ModeMsg.response.mode_sent)
+ //            {
+ //                ROS_INFO("Enabling offboard...");
+ //            }
+ //            last_request_offboard = ros::Time::now();
+ //        }
+	// }
+	// ROS_INFO("Mode set to OFFBOARD");
 
 	
 	cout << "First waypoint  " << waypointList[0].x << " " << waypointList[0].y << " " << waypointList[0].z << " " << waypointList[0].psi << endl; 
