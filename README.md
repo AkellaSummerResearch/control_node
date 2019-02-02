@@ -40,7 +40,7 @@ git clone https://github.com/radionavlab/joystick_drivers
 git clone https://github.com/radionavlab/mg_msgs.git
 https://github.com/marcelinomalmeidan/mapper.git
 cd ~/catkin_ws/src/px4_control
-git checkout update_mavros
+git checkout lockheed_quads
 ```
 
 
